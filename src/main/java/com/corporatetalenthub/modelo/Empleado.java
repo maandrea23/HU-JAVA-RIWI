@@ -103,6 +103,10 @@ public class Empleado {
         return idEmpleado;
     }
 
+    public float getPuntajeTest() {
+        return puntajeTest;
+    }
+
     public double getBonoMensual() {
         return bonoMensual;
     }
