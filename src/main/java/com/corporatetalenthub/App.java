@@ -1,96 +1,88 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package com.corporatetalenthub;
+
 import com.corporatetalenthub.modelo.Empleado;
-import com.corporatetalenthub.modelo.EmpresaRecord;
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+import java.util.List;
+import java.util.Scanner;
 
-/**
- *
- * @author cohorte5
- */
-                                           
-
+/** Punto de entrada del sistema Corporate Talent Hub. */
 public class App {
-
     public static void main(String[] args) {
-        String encabezado = """
+        var empleados = new ArrayList<Empleado>();
+        var scanner = new Scanner(System.in);
+        var continuar = true;
+        System.out.println("""
                 =====================================
                      CORPORATE TALENT HUB
                    Gestión del talento humano
                 =====================================
-                """;
-        System.out.println(encabezado);
+                """);
+        do {
+            System.out.println("\n1. Registrar empleado\n2. Ver reporte\n3. Salir");
+            System.out.print("Seleccione una opción: ");
+            try {
+                var opcion = scanner.nextInt(); scanner.nextLine();
+                // Java 8 requiere break; olvidarlo causa fall-through.
+                // Java 17/21 usa ->, que evita ese riesgo y resulta más breve.
+                switch (opcion) {
+                    case 1: empleados.add(registrarEmpleado(scanner)); break;
+                    case 2: mostrarReporte(empleados, scanner); break;
+                    case 3: continuar = false; System.out.println("Sistema finalizado."); break;
+                    default: System.out.println("Opción fuera del rango 1-3."); break;
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Entrada inválida: debe ingresar un número del menú."); scanner.nextLine();
+            }
+        } while (continuar);
+        scanner.close();
+    }
 
-        Empleado empleado = crearEmpleadoDePrueba();
-        EmpresaRecord empresa = new EmpresaRecord(
-                "CodeUp Solutions",
-                "900123456-7",
-                2015);
-
-        //System.out.println(empleado);
-        System.out.println("Empresa: " + empresa.nombre());
-        System.out.println("Salario final: " + empleado.calcularSalarioFinal());
-        System.out.println("¿ID par con bono extra?: " + empleado.tieneBonoExtra());
-        System.out.println("¿Empleado elegible?: " + empleado.validarElegibilidad());
-
-        if (empleado.tieneBonoExtra()) {
-            empleado.actualizarBonoMensual(100_000.0);
-            System.out.println("Bono actualizado con +=: " + empleado.getBonoMensual());
+    private static Empleado registrarEmpleado(Scanner s) {
+        System.out.println("\n--- Registro de empleado ---");
+        var nivel = (byte) leerLong(s, "Nivel de acceso (0-10): ", 0, 10);
+        var anio = (short) leerLong(s, "Año de ingreso (2000-2100): ", 2000, 2100);
+        var id = (int) leerLong(s, "ID del empleado (positivo): ", 1, Integer.MAX_VALUE);
+        var documento = leerLong(s, "Número de documento (positivo): ", 1, Long.MAX_VALUE);
+        var puntaje = (float) leerDouble(s, "Puntaje de test (0-100): ", 0, 100);
+        var salario = leerDouble(s, "Salario base (>= 0): ", 0, Double.MAX_VALUE);
+        char contrato; do { System.out.print("Tipo de contrato (I/T): "); var v = s.nextLine().trim().toUpperCase(); contrato = v.length() == 1 ? v.charAt(0) : '\0'; } while (contrato != 'I' && contrato != 'T');
+        boolean activo;
+        while (true) {
+            System.out.print("¿Está activo? (true/false): ");
+            var v = s.nextLine().trim();
+            if (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("false")) { activo = Boolean.parseBoolean(v); break; }
+            System.out.println("Use true o false.");
         }
-
-        compararReferencias();
-        ejecutarLaboratorioDeNulos(empleado);
+        System.out.print("Nombre: "); var nombre = s.nextLine().trim();
+        var edad = (int) leerLong(s, "Edad (18-70): ", 18, 70);
+        var sede = (int) leerLong(s, "ID de sede (1-999): ", 1, 999);
+        var bono = leerDouble(s, "Bono mensual (>= 0): ", 0, Double.MAX_VALUE);
+        return new Empleado(nivel, anio, id, documento, puntaje, salario, contrato, activo, nombre, edad, sede, bono);
     }
 
-    private static Empleado crearEmpleadoDePrueba() {
-        return new Empleado(
-                (byte) 3,             // byte
-                (short) 2024,         // short
-                102,                  // int: ID par
-                1_023_456_789L,       // long: sufijo L
-                92.5f,                // float: sufijo f
-                3_000_000.0,          // double
-                'I',                  // char: contrato indefinido
-                true,                 // boolean
-                "Laura Gómez",        // String
-                27,
-                2,
-                500_000.0);
-    }
-
-    private static void compararReferencias() {
-        Empleado primero = crearEmpleadoDePrueba();
-        Empleado segundo = crearEmpleadoDePrueba();
-        Empleado aliasDelPrimero = primero;
-
-        System.out.println("primero == segundo: " + (primero == segundo));
-        System.out.println("primero == aliasDelPrimero: "
-                + (primero == aliasDelPrimero));
-
-        // == no compara los atributos de los objetos: comprueba si ambas variables
-        // se refieren exactamente al mismo objeto. primero y segundo se crearon con
-        // new por separado; aliasDelPrimero recibió la misma referencia de primero.
-        // Conceptualmente los objetos viven en el Heap, pero == no debe entenderse
-        // como una comparación manual de direcciones físicas de memoria.
-    }
-
-    private static void ejecutarLaboratorioDeNulos(Empleado empleado) {
-        empleado.setNombre(null);
-
-        try {
-            System.out.println(empleado.getNombre().toUpperCase());
-        } catch (NullPointerException excepcion) {
-            System.out.println("NPE controlada: " + excepcion.getMessage());
+    private static void mostrarReporte(List<Empleado> empleados, Scanner s) {
+        if (empleados.isEmpty()) { System.out.println("No hay empleados registrados."); return; }
+        var desempeno = new double[empleados.size()][3];
+        for (var fila = 0; fila < empleados.size(); fila++) {
+            for (var trimestre = 0; trimestre < 3; trimestre++) desempeno[fila][trimestre] = leerDouble(s, "Calificación T" + (trimestre + 1) + " (0-100): ", 0, 100);
+            var promedio = (desempeno[fila][0] + desempeno[fila][1] + desempeno[fila][2]) / 3;
+            var simplificado = (int) promedio; // Casting: descarta la parte decimal.
+            var promocion = promedio >= 80 ? "Promoción aprobada" : "Promoción pendiente";
+            System.out.printf("%s | Promedio %.2f | Puntaje %d | %s | Categoría %s%n", empleados.get(fila).getNombre(), promedio, simplificado, promocion, obtenerCategoriaSalarial(empleados.get(fila).calcularSalarioFinal()));
         }
-
-        // Java 8 normalmente informa que ocurrió una NullPointerException y señala
-        // la línea mediante el stack trace, pero una expresión encadenada puede hacer
-        // difícil reconocer cuál referencia era null.
-        // Desde Java 14, Helpful NullPointerExceptions puede indicar que no se pudo
-        // invocar toUpperCase() porque el resultado de getNombre() era null.
-        // El try/catch es solo para que el laboratorio no detenga toda la aplicación;
-        // la solución real es validar el dato o impedir nombres nulos según el dominio.
     }
+
+    /** Switch Expression Java 17/21 con sintaxis de flecha. */
+    public static String obtenerCategoriaSalarial(double salario) {
+        var nivel = salario >= 10_000_000 ? 2 : salario >= 5_000_000 ? 1 : 0;
+        return switch (nivel) {
+            case 2 -> "Ejecutiva";
+            case 1 -> "Senior";
+            default -> "Inicial";
+        };
+    }
+
+    private static long leerLong(Scanner s, String p, long min, long max) { while (true) try { System.out.print(p); var v = s.nextLong(); s.nextLine(); if (v >= min && v <= max) return v; System.out.println("Valor fuera de rango."); } catch (InputMismatchException e) { System.out.println("Debe ingresar un número entero."); s.nextLine(); } }
+    private static double leerDouble(Scanner s, String p, double min, double max) { while (true) try { System.out.print(p); var v = s.nextDouble(); s.nextLine(); if (v >= min && v <= max) return v; System.out.println("Valor fuera de rango."); } catch (InputMismatchException e) { System.out.println("Debe ingresar un número decimal."); s.nextLine(); } }
 }
