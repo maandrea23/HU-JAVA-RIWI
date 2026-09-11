@@ -5,6 +5,9 @@ import com.corporatetalenthub.modelo.DesempenoReport;
 import com.corporatetalenthub.modelo.Persona;
 import com.corporatetalenthub.modelo.Desarrollador;
 import com.corporatetalenthub.modelo.Gerente;
+import com.riwi.talent.controller.TalentController;
+import com.riwi.talent.model.EmpleadoDAOImpl;
+import com.riwi.talent.view.TalentView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.InputMismatchException;
@@ -30,7 +33,7 @@ public class App {
                 =====================================
                 """);
         do {
-            System.out.println("\n1. Registrar empleado\n2. Ver reporte\n3. Buscar por ID\n4. Eliminar por ID\n5. Filtrar puntaje\n6. Salir");
+            System.out.println("\n1. Registrar empleado\n2. Ver reporte\n3. Buscar por ID\n4. Eliminar por ID\n5. Filtrar puntaje\n6. Salir\n7. Módulo MVC y persistencia JDBC");
             System.out.print("Seleccione una opción: ");
             try {
                 var opcion = scanner.nextInt(); scanner.nextLine();
@@ -48,10 +51,13 @@ public class App {
                     case 4: eliminarEmpleado(empleados, empleadosPorId, scanner); break;
                     case 5: filtrarPorPuntaje(empleados, empleadosPorId, scanner); break;
                     case 6: continuar = false; System.out.println("Sistema finalizado."); break;
-                    default: System.out.println("Opción fuera del rango 1-6."); break;
+                    case 7: new TalentView(new TalentController(new EmpleadoDAOImpl()), scanner).iniciar(); break;
+                    default: System.out.println("Opción fuera del rango 1-7."); break;
                 }
             } catch (InputMismatchException e) {
                 System.out.println("Entrada inválida: debe ingresar un número del menú."); scanner.nextLine();
+            } catch (java.sql.SQLException e) {
+                System.out.println("No fue posible iniciar la persistencia: " + e.getMessage());
             }
         } while (continuar);
         scanner.close();
