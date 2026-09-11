@@ -17,12 +17,11 @@ package com.corporatetalenthub.modelo;
  * getters, setter y métodos explícitamente. Esa verbosidad es útil cuando el
  * objeto necesita estado mutable, como bonoMensual o nombre.
  */
-public class Empleado {
+public non-sealed class Empleado extends Persona implements Promocionable {
 
     // Los 8 tipos primitivos requeridos:
     private byte nivelAcceso;
     private short anioIngreso;
-    private int idEmpleado;
     private long numeroDocumento;
     private float puntajeTest;
     private double salarioBase;
@@ -30,7 +29,6 @@ public class Empleado {
     private boolean esActivo;
 
     // String no es primitivo: es una clase y esta variable guarda una referencia.
-    private String nombre;
 
     // Datos adicionales necesarios para las reglas de negocio.
     private int edad;
@@ -50,15 +48,14 @@ public class Empleado {
             int edad,
             int idSede,
             double bonoMensual) {
+        super(idEmpleado, nombre);
         this.nivelAcceso = nivelAcceso;
         this.anioIngreso = anioIngreso;
-        this.idEmpleado = idEmpleado;
         this.numeroDocumento = numeroDocumento;
         this.puntajeTest = puntajeTest;
         this.salarioBase = salarioBase;
         this.tipoContrato = tipoContrato;
         this.esActivo = esActivo;
-        this.nombre = nombre;
         this.edad = edad;
         this.idSede = idSede;
         this.bonoMensual = bonoMensual;
@@ -76,7 +73,7 @@ public class Empleado {
 
     public boolean tieneBonoExtra() {
         // % se evalúa antes que ==. Un residuo cero indica que el ID es par.
-        return idEmpleado % 2 == 0;
+        return getIdEmpleado() % 2 == 0;
     }
 
     public boolean validarElegibilidad() {
@@ -91,18 +88,6 @@ public class Empleado {
         bonoMensual += incremento;
     }
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public int getIdEmpleado() {
-        return idEmpleado;
-    }
-
     public float getPuntajeTest() {
         return puntajeTest;
     }
@@ -112,17 +97,22 @@ public class Empleado {
     }
 
     @Override
+    public double calcularBonoAscenso() {
+        return bonoMensual * 1.10;
+    }
+
+    @Override
     public String toString() {
         return "Empleado{" +
                 "nivelAcceso=" + nivelAcceso +
                 ", anioIngreso=" + anioIngreso +
-                ", idEmpleado=" + idEmpleado +
+                ", idEmpleado=" + getIdEmpleado() +
                 ", numeroDocumento=" + numeroDocumento +
                 ", puntajeTest=" + puntajeTest +
                 ", salarioBase=" + salarioBase +
                 ", tipoContrato=" + tipoContrato +
                 ", esActivo=" + esActivo +
-                ", nombre='" + nombre + '\'' +
+                ", nombre='" + getNombre() + '\'' +
                 ", edad=" + edad +
                 ", idSede=" + idSede +
                 ", bonoMensual=" + bonoMensual +

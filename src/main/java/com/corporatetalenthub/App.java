@@ -1,6 +1,10 @@
 package com.corporatetalenthub;
 
 import com.corporatetalenthub.modelo.Empleado;
+import com.corporatetalenthub.modelo.DesempenoReport;
+import com.corporatetalenthub.modelo.Persona;
+import com.corporatetalenthub.modelo.Desarrollador;
+import com.corporatetalenthub.modelo.Gerente;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.InputMismatchException;
@@ -111,9 +115,29 @@ public class App {
             var simplificado = (int) promedio; // Casting: descarta la parte decimal.
             var promocion = promedio >= 80 ? "Promoción aprobada" : "Promoción pendiente";
             System.out.printf("%s | Promedio %.2f | Puntaje %d | %s | Categoría %s%n", empleados.get(fila).getNombre(), promedio, simplificado, promocion, obtenerCategoriaSalarial(empleados.get(fila).calcularSalarioFinal()));
+            var reporte = new DesempenoReport(empleados.get(fila).getIdEmpleado(), promedio, promocion);
+            System.out.println("Reporte inmutable: " + reporte + " | Perfil: " + describirPerfil(empleados.get(fila)));
         }
         var promedioSalarios = empleados.stream().mapToDouble(Empleado::calcularSalarioFinal).average().orElse(0);
         System.out.printf("Total empleados: %d | Promedio de salarios: %.2f%n", empleados.size(), promedioSalarios);
+    }
+
+    /**
+     * Legacy Java 8/11 requería instanceof y casting manual:
+     * ((Desarrollador) persona).getLenguaje(). Java 17/21 enlaza el tipo y
+     * elimina ese casting repetitivo mediante Pattern Matching for instanceof.
+     */
+    public static String describirPerfil(Persona persona) {
+        if (persona instanceof Desarrollador des) {
+            return "Desarrollador - " + des.getLenguaje();
+        }
+        if (persona instanceof Gerente gerente) {
+            return "Gerente - presupuesto " + gerente.getPresupuestoMensual();
+        }
+        if (persona instanceof Empleado) {
+            return "Empleado general";
+        }
+        return "Consultor externo";
     }
 
     /** Switch Expression Java 17/21 con sintaxis de flecha. */
